@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">PopularMovies</string>
+    <string name="most_popular">Most popular</string>
+    <string name="highest_rated">Highest rated</string>
+    <string name="error_loading">Unable to load data. Please try again later!</string>
+    <string name="released">Released:</string>
+    <string name="rating">Rating:</string>
 </resources>
