@@ -10,18 +10,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.example.android.popularmovies.DetailsActivity;
+import com.example.android.popularmovies.Models.Movie;
 import com.example.android.popularmovies.R;
 import com.squareup.picasso.Picasso;
 
+import java.util.List;
+
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {
 
-    private Movie[] moviesArray;
+    // Cached copy of words
+    private List<Movie> moviesList;
 
     private Context context;
 
     // Provide a suitable constructor
-    public MovieAdapter(Movie[] movies) {
-        moviesArray = movies;
+    public MovieAdapter(List<Movie> movies) {
+        moviesList = movies;
     }
 
     @NonNull
@@ -36,7 +40,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
 
     @Override
     public void onBindViewHolder(@NonNull MovieAdapterViewHolder holder, int position) {
-        String posterBasePath = moviesArray[position].getPosterPath();
+        String posterBasePath = moviesList.get(position).getPosterPath();
         String posterCompletePath = "http://image.tmdb.org/t/p/" + "w185/" + posterBasePath;
 
         Picasso.with(context)
@@ -52,7 +56,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
      */
     @Override
     public int getItemCount() {
-        return moviesArray.length;
+        return moviesList.size();
     }
 
     /**
@@ -76,7 +80,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            Movie currentMovie = moviesArray[adapterPosition];
+            Movie currentMovie = moviesList.get(adapterPosition);
             Intent intentToStartDetailActivity = new Intent(context, DetailsActivity.class);
             intentToStartDetailActivity.putExtra("currentMovie", currentMovie);
             context.startActivity(intentToStartDetailActivity);

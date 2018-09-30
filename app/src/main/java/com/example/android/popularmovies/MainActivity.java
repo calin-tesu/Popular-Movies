@@ -1,11 +1,15 @@
 package com.example.android.popularmovies;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,27 +20,18 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.android.popularmovies.utilities.Movie;
+import com.example.android.popularmovies.Models.Movie;
 import com.example.android.popularmovies.utilities.MovieAdapter;
 import com.example.android.popularmovies.utilities.QueryUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TMDB_BASE_URL = "http://api.themoviedb.org/3/movie/";
-
-    //Please provide your own API Key to access TMDB
-    private static final String API_KEY = "xxx";
-
-    //API end-point for fetching the most popular movies
-    private static final String POPULARITY = "popular";
-
-    //API end_point for fetching the top rated movies
-    private static final String TOP_RATED = "top_rated";
-
-    String orderMoviesBy;
+    private String orderMoviesBy;
 
     private RecyclerView mRecyclerView;
 
@@ -47,6 +42,12 @@ public class MainActivity extends AppCompatActivity {
     private MovieAdapter mMovieAdapter;
 
     private Movie[] moviesArray;
+
+    private FavoriteMovieViewModel movieViewModel;
+
+    private GridLayoutManager layoutManager;
+
+    private NetworkInfo networkInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,24 +62,30 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setHasFixedSize(true);
 
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        switch (getResources().getConfiguration().orientation) {
+            case Configuration.ORIENTATION_PORTRAIT:
+                layoutManager = new GridLayoutManager(this, 2);
+                break;
+            case Configuration.ORIENTATION_LANDSCAPE:
+                layoutManager = new GridLayoutManager(this, 3);
+                break;
+        }
+
         mRecyclerView.setLayoutManager(layoutManager);
 
-        orderMoviesBy = POPULARITY;
+        orderMoviesBy = Constants.POPULARITY;
 
         // Get a reference to the ConnectivityManager to check state of network connectivity
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         // Get details on the currently active default data network
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        networkInfo = connMgr.getActiveNetworkInfo();
 
         // If there is a network connection, fetch data
-        if (networkInfo != null && networkInfo.isConnected()) {
-            new FetchMoviesTask().execute();
-        } else {
-            mRecyclerView.setVisibility(View.INVISIBLE);
-            mErrorMessage.setVisibility(View.VISIBLE);
-        }
+        if (haveInternetConnection()) new FetchMoviesTask().execute();
+
+        // Get a new or existing ViewModel from the ViewModelProvider.
+        movieViewModel = ViewModelProviders.of(this).get(FavoriteMovieViewModel.class);
 
     }
 
@@ -95,15 +102,41 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.most_popular) {
-            orderMoviesBy = POPULARITY;
-            new FetchMoviesTask().execute();
-        } else if (id == R.id.highest_rated) {
-            orderMoviesBy = TOP_RATED;
-            new FetchMoviesTask().execute();
+        switch (id) {
+            case R.id.most_popular:
+                orderMoviesBy = Constants.POPULARITY;
+                // If there is a network connection, fetch data
+                if (haveInternetConnection()) new FetchMoviesTask().execute();
+                break;
+            case R.id.highest_rated:
+                orderMoviesBy = Constants.TOP_RATED;
+                if (haveInternetConnection()) new FetchMoviesTask().execute();
+                break;
+            case R.id.favorites:
+                mRecyclerView.setVisibility(View.VISIBLE);
+                mErrorMessage.setVisibility(View.INVISIBLE);
+                movieViewModel.getAllFavoriteMovies().observe(this, new Observer<List<Movie>>() {
+                    @Override
+                    public void onChanged(@Nullable List<Movie> movies) {
+                        moviesArray = movies.toArray(new Movie[0]);
+                        mMovieAdapter = new MovieAdapter(Arrays.asList(moviesArray));
+                        mRecyclerView.setAdapter(mMovieAdapter);
+                    }
+                });
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public boolean haveInternetConnection() {
+        if (networkInfo != null && networkInfo.isConnected()) {
+            return true;
+        } else {
+            mRecyclerView.setVisibility(View.INVISIBLE);
+            mErrorMessage.setVisibility(View.VISIBLE);
+            return false;
+        }
     }
 
     public class FetchMoviesTask extends AsyncTask<String, Void, Movie[]> {
@@ -123,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Movie[] doInBackground(String... params) {
 
-            Uri builtUri = Uri.parse(TMDB_BASE_URL + orderMoviesBy).buildUpon()
-                    .appendQueryParameter("api_key", API_KEY)
+            Uri builtUri = Uri.parse(Constants.TMDB_BASE_URL + orderMoviesBy).buildUpon()
+                    .appendQueryParameter("api_key", Constants.API_KEY)
                     .build();
 
             URL url = null;
@@ -150,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Movie[] movies) {
             mLoadingIndicator.setVisibility(View.INVISIBLE);
-            mMovieAdapter = new MovieAdapter(moviesArray);
+            mMovieAdapter = new MovieAdapter(Arrays.asList(moviesArray));
             mRecyclerView.setAdapter(mMovieAdapter);
         }
     }

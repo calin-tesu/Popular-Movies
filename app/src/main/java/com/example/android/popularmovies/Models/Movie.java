@@ -1,20 +1,31 @@
-package com.example.android.popularmovies.utilities;
+package com.example.android.popularmovies.Models;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
+@Entity(tableName = "favorite_movies")
 public class Movie implements Parcelable {
 
-    private String title;
+    @PrimaryKey
+    @ColumnInfo(name = "movie_id")
+    @NonNull
     private int movieID;
+    private String title;
+    @ColumnInfo(name = "release_date")
     private String releaseDate;
+    @ColumnInfo(name = "vote_average")
     private int voteAverage;
     private String overview;
+    @ColumnInfo(name = "poster_path")
     private String posterPath;
 
-    public Movie(String title, int movieID, String releaseDate, int voteAverage, String overview, String posterPath) {
-        this.title = title;
+    public Movie(int movieID, String title, String releaseDate, int voteAverage, String overview, String posterPath) {
         this.movieID = movieID;
+        this.title = title;
         this.releaseDate = releaseDate;
         this.voteAverage = voteAverage;
         this.overview = overview;
@@ -34,20 +45,12 @@ public class Movie implements Parcelable {
     };
 
     protected Movie(Parcel in) {
-        title = in.readString();
         movieID = in.readInt();
+        title = in.readString();
         releaseDate = in.readString();
         voteAverage = in.readInt();
         overview = in.readString();
         posterPath = in.readString();
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public int getMovieID() {
@@ -56,6 +59,14 @@ public class Movie implements Parcelable {
 
     public void setMovieID(int movieID) {
         this.movieID = movieID;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getReleaseDate() {
@@ -114,8 +125,8 @@ public class Movie implements Parcelable {
      */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
         dest.writeInt(movieID);
+        dest.writeString(title);
         dest.writeString(releaseDate);
         dest.writeInt(voteAverage);
         dest.writeString(overview);

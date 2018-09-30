@@ -1,5 +1,8 @@
 package com.example.android.popularmovies.utilities;
 
+import com.example.android.popularmovies.Models.Movie;
+import com.example.android.popularmovies.Models.Trailer;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,14 +59,14 @@ public final class QueryUtils {
 
             for (int i = 0; i < moviesArray.length(); i++) {
                 JSONObject currentMovie = moviesArray.getJSONObject(i);
-                String title = currentMovie.getString("title");
                 int movieID = currentMovie.getInt("id");
+                String title = currentMovie.getString("title");
                 String releaseDate = currentMovie.getString("release_date");
                 int voteAverage = currentMovie.getInt("vote_average");
                 String overview = currentMovie.getString("overview");
                 String posterPath = currentMovie.getString("poster_path");
 
-                movies[i] = new Movie(title, movieID, releaseDate, voteAverage, overview, posterPath);
+                movies[i] = new Movie(movieID, title, releaseDate, voteAverage, overview, posterPath);
 
             }
 
@@ -72,5 +75,50 @@ public final class QueryUtils {
         }
 
         return movies;
+    }
+
+    public static String[] extractReviewsFromJson(String jsonReviewsResponse) {
+        String[] reviews = null;
+
+        try {
+            JSONObject baseJson = new JSONObject(jsonReviewsResponse);
+            JSONArray reviewsArray = baseJson.getJSONArray("results");
+
+            reviews = new String[reviewsArray.length()];
+
+            for (int i = 0; i < reviewsArray.length(); i++) {
+                JSONObject currentReview = reviewsArray.getJSONObject(i);
+                reviews[i] = currentReview.getString("content");
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return reviews;
+    }
+
+    public static Trailer[] extractTrailersFromJson(String jsonReviewsResponse) {
+        Trailer[] trailers = null;
+
+        try {
+            JSONObject baseJson = new JSONObject(jsonReviewsResponse);
+            JSONArray trailersArray = baseJson.getJSONArray("results");
+
+            trailers = new Trailer[trailersArray.length()];
+
+            for (int i = 0; i < trailersArray.length(); i++) {
+                JSONObject currentTrailer = trailersArray.getJSONObject(i);
+                String trailerName = currentTrailer.getString("name");
+                String trailerKey = currentTrailer.getString("key");
+
+                trailers[i] = new Trailer(trailerName, trailerKey);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return trailers;
     }
 }
